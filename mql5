@@ -1,0 +1,76 @@
+mql5
+//+------------------------------------------------------------------+
+//|                                             Time And Sales Delta |
+//|                                      Developed by Forex Robot Easy Team |
+//|                                             forexroboteasy.com |
+//+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//|                             Indicator Constants and Variables |
+//+------------------------------------------------------------------+
+#property indicator_chart_window
+#property indicator_buffers 2
+#property indicator_color1 Blue
+#property indicator_color2 Red
+
+double DeltaBuffer[];
+double CumulativeDeltaBuffer[];
+
+//+------------------------------------------------------------------+
+//|                                Indicator Initialization Function |
+//+------------------------------------------------------------------+
+int OnInit()
+{
+   // Create buffers for delta and cumulative delta
+   SetIndexBuffer(0, DeltaBuffer, INDICATOR_DATA);
+   SetIndexBuffer(1, CumulativeDeltaBuffer, INDICATOR_DATA);
+   
+   // Set indicator labels
+   IndicatorSetString(INDICATOR_SHORTNAME, 'Time And Sales Delta');
+   IndicatorSetString(INDICATOR_LEVELS, 'Buying;Selling');
+   
+   return(INIT_SUCCEEDED);
+}
+
+//+------------------------------------------------------------------+
+//|                                           Indicator Calculation |
+//+------------------------------------------------------------------+
+int OnCalculate(const int rates_total,
+                const int prev_calculated,
+                const datetime &time[],
+                const double &open[],
+                const double &high[],
+                const double &low[],
+                const double &close[],
+                const long &tick_volume[],
+                const long &volume[],
+                const int &spread[])
+{
+   // Calculate delta and cumulative delta
+   for (int i = prev_calculated; i < rates_total; i++)
+   {
+      double buying_volume = 0;
+      double selling_volume = 0;
+      
+      // Calculate buying and selling volumes for each tick
+      for (int j = 0; j < tick_volume[i]; j++)
+      {
+         if (close[i] > open[i])
+            buying_volume += volume[i];
+         else if (close[i] < open[i])
+            selling_volume += volume[i];
+      }
+      
+      // Calculate delta and cumulative delta
+      double delta = buying_volume - selling_volume;
+      double cumulative_delta = 0;
+      if (i > 0)
+         cumulative_delta = CumulativeDeltaBuffer[i - 1] + delta;
+         
+      // Store delta and cumulative delta values
+      DeltaBuffer[i] = delta;
+      CumulativeDeltaBuffer[i] = cumulative_delta;
+   }
+   
+   return(rates_total);
+}
